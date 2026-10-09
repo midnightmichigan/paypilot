@@ -80,3 +80,22 @@ generator for casual sellers:
 2. Push to public GitHub (midnightmichigan) with an OSI license file.
 3. Main-agent review of the entry, then submit on Devpost before Nov 12.
 4. Optional parallel: start Qloo (#2) scaffold — 21-day window, smallest pool.
+
+## Progress 2026-10-09 (subagent run)
+- GitHub repo created + pushed: https://github.com/midnightmichigan/paypilot
+  (public, MIT LICENSE, .gitignore; SUBMISSION.md committed). gh auth
+  verified as midnightmichigan (renamed account).
+- Devpost submission package written: SUBMISSION.md — title, tagline,
+  description, run instructions, pre-submit checklist. NOT submitted;
+  flagged ready-for-review.
+- BLOCKED (needs parent browser task): PayPal Developer sandbox app creation
+  at developer.paypal.com — requires logged-in browser session with his
+  PayPal credentials (he confirmed "you have my PayPal already"; creds live
+  in the parent's Secure Vault, not accessible to this subagent). Once the
+  sandbox REST app exists, set PAYPAL_CLIENT_ID / PAYPAL_CLIENT_SECRET /
+  PAYPAL_MERCHANT_EMAIL and run `python3 test_flow.py` in real mode, then
+  confirm the invoice in the sandbox dashboard. No SMS/gov-ID expected for
+  sandbox apps; if a verification wall appears, log it and stop.
+- Qloo scaffold started: ~/workspace/bounty-hunts/qloo-agentic/ (see its
+  HUNT-LOG.md). Qloo API key still needs the hackathon Google Form
+  (browser/form step for parent).
