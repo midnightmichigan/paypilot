@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PayPilot — AI invoice generator for casual sellers</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; color: #1a1a2e; }
+  h1 { font-size: 1.6rem; }
+  textarea, input { width: 100%; padding: .6rem; font-size: 1rem; border: 1px solid #bbb; border-radius: 8px; }
+  button { background: #003087; color: #fff; border: 0; border-radius: 8px; padding: .7rem 1.2rem; font-size: 1rem; cursor: pointer; margin-top: .6rem; }
+  button:disabled { opacity: .5; }
+  table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+  td, th { border-bottom: 1px solid #ddd; padding: .4rem; text-align: left; }
+  .card { background: #f6f8ff; border: 1px solid #d7e0ff; border-radius: 10px; padding: 1rem; margin-top: 1rem; }
+  .muted { color: #666; font-size: .9rem; }
+</style>
+</head>
+<body>
+<h1>💸 PayPilot</h1>
+<p class="muted">Describe the sale in plain English. AI turns it into a PayPal invoice.</p>
+
+<label>What are you selling?</label>
+<textarea id="desc" rows="3" placeholder='e.g. "Selling 3 handmade candles at $12 each, buyer covers $5 shipping"'></textarea>
+
+<label style="display:block;margin-top:.8rem">Buyer's email</label>
+<input id="email" type="email" placeholder="buyer@example.com">
+
+<button id="go" onclick="run()">Generate &amp; send invoice</button>
+
+<div id="out"></div>
+
+<script>
+async function run() {
+  const out = document.getElementById('out');
+  const btn = document.getElementById('go');
+  btn.disabled = true;
+  out.innerHTML = '<p class="muted">Working…</p>';
+  try {
+    const p = await fetch('/api/parse', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({description: document.getElementById('desc').value})
+    }).then(r => r.json());
+    if (p.error) throw new Error(p.error);
+    const rows = p.items.map(i =>
+      `<tr><td>${i.name}</td><td>${i.quantity}</td><td>$${i.unit_price.toFixed(2)}</td></tr>`).join('');
+    const inv = await fetch('/api/invoice', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({parsed: p, email: document.getElementById('email').value})
+    }).then(r => r.json());
+    if (inv.error) throw new Error(inv.error);
+    out.innerHTML = `<div class="card">
+      <h3>Invoice ready — ${p.currency} ${p.total.toFixed(2)}</h3>
+      <table><tr><th>Item</th><th>Qty</th><th>Unit</th></tr>${rows}</table>
+      <p class="muted">${p.notes}</p>
+      <p><b>Invoice ID:</b> ${inv.id} <span class="muted">(${inv.mode})</span></p>
+      <p><b>Status:</b> ${inv.status}</p>
+      ${inv.payer_view_url ? `<p><a href="${inv.payer_view_url}" target="_blank">Buyer payment link →</a></p>` : ''}
+    </div>`;
+  } catch (e) {
+    out.innerHTML = `<div class="card"><b>Error:</b> ${e.message}</div>`;
+  }
+  btn.disabled = false;
+}
+</script>
+</body>
+</html>
