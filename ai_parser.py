@@ -45,6 +45,32 @@ def parse_with_llm(text):
 
 MONEY = re.compile(r"\$\s?(\d+(?:\.\d{1,2})?)")
 QTY = re.compile(r"(\d+)\s*(?:x|pieces?|items?|units?)\b", re.IGNORECASE)
+# filler words that pollute the item name in fallback mode
+LEAD_VERB = re.compile(r"^\s*(?:selling|sold|sell|for sale)\b", re.IGNORECASE)
+UNIT_WORDS = re.compile(
+    r"\b(each|apiece|per item|per unit|a piece)\b", re.IGNORECASE)
+SHIPPING_CLAUSE = re.compile(
+    r"[,;]?\s*(?:and\s+)?(?:buyer|customer)\s+covers?\s+"
+    r"\$?\d+(?:\.\d{1,2})?\s*(?:for\s+)?(?:shipping|postage|delivery)\b"
+    r"|[,;]?\s*plus\s+\$?\d+(?:\.\d{1,2})?\s*(?:for\s+)?(?:shipping|postage|delivery)\b"
+    r"|\+\s*\$?\d+(?:\.\d{1,2})?\s*(?:shipping|postage|delivery)\b",
+    re.IGNORECASE)
+
+
+def clean_item_name(text):
+    """Turn a raw description into a presentable invoice item name."""
+    # shipping clause first: it matches on the $ amounts MONEY would strip
+    name = SHIPPING_CLAUSE.sub("", text)
+    name = MONEY.sub("", name)
+    name = QTY.sub("", name)
+    name = UNIT_WORDS.sub("", name)
+    name = LEAD_VERB.sub("", name)
+    # bare leading quantity ("3 handmade candles") and trailing prepositions
+    name = re.sub(r"^\s*\d+\s+", "", name)
+    name = re.sub(r"\s+(?:at|for|with|of|in|on)$", "", name, flags=re.IGNORECASE)
+    name = re.sub(r"\s+", " ", name).strip(" ,.-")
+    name = (name[:60] + "...") if len(name) > 63 else name
+    return name or "Item"
 
 
 def parse_rule_based(text):
@@ -55,12 +81,8 @@ def parse_rule_based(text):
     qty_m = (QTY.search(no_money)
              or re.search(r"\b(\d+)\s+[a-zA-Z]", no_money))  # bare number + word
     qty = int(qty_m.group(1)) if qty_m else 1
-    # crude item name: strip prices/quantities, take the noun-ish remainder
-    name = MONEY.sub("", text)
-    name = QTY.sub("", name)
-    name = re.sub(r"\s+", " ", name).strip(" ,.-")
-    name = (name[:60] + "...") if len(name) > 63 else name
-    name = name or "Item"
+    # cleaned item name: strip prices/quantities/shipping clauses/filler
+    name = clean_item_name(text)
     per_unit = bool(re.search(r"\b(each|apiece|per item|per unit|a piece)\b",
                              text, re.IGNORECASE))
     if amounts:
