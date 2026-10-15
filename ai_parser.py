@@ -67,8 +67,8 @@ def clean_item_name(text):
     name = LEAD_VERB.sub("", name)
     # bare leading quantity ("3 handmade candles") and trailing prepositions
     name = re.sub(r"^\s*\d+\s+", "", name)
-    name = re.sub(r"\s+(?:at|for|with|of|in|on)$", "", name, flags=re.IGNORECASE)
     name = re.sub(r"\s+", " ", name).strip(" ,.-")
+    name = re.sub(r"\s+(?:at|for|with|of|in|on)$", "", name, flags=re.IGNORECASE)
     name = (name[:60] + "...") if len(name) > 63 else name
     return name or "Item"
 
