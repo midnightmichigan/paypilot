@@ -42,7 +42,10 @@ python3 test_flow.py      # end-to-end smoke test (parse + mock invoice)
    required — setup instructions or hosted URL satisfy it).
 3. Push to a public GitHub repo under midnightmichigan with an OSI license.
 4. Confirm official-rules eligibility (18+, US resident — expected fine).
-5. Polish item-name cleanup in the fallback parser (works, names are crude).
+5. Polish item-name cleanup in the fallback parser — DONE 2026-10-15
+   (shipping clauses, unit markers, filler words stripped; all tests pass).
+6. DEMO.md scripted walkthrough written — DONE 2026-10-15 (no video
+   required by rules; functional demo via app + walkthrough).
 
 ## Files
 - `app.py` — stdlib HTTP server, routes `/`, `/api/health`, `/api/parse`, `/api/invoice`
